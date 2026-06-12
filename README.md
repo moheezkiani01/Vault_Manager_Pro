@@ -318,4 +318,4 @@ This project is suitable for learning, demos, and academic submissions. Before u
 
 ## License
 
-This project is for educational purposes. You can add your preferred license, such as MIT, before publishing it on GitHub.
+This project is for educational purposes.
