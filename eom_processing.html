@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>End-of-Month Processing — VaultManager Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:'Inter',sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem}
+        .card{background:#1e293b;border:1px solid #334155;border-radius:20px;padding:2.5rem;width:100%;max-width:560px}
+        .back-link{display:inline-flex;align-items:center;gap:.4rem;color:#64748b;font-size:.8rem;text-decoration:none;margin-bottom:1.25rem;transition:color .15s}
+        .back-link:hover{color:#94a3b8}
+        .card-header{margin-bottom:2rem}
+        .card-header h2{font-size:1.35rem;font-weight:700;color:#f1f5f9}
+        .card-header p{color:#64748b;font-size:.875rem;margin-top:.25rem}
+
+        /* Result summary box — shown after processing runs */
+        .result-box{
+            border-radius:14px;padding:1.5rem;margin-bottom:1.5rem;
+            border-left:4px solid;
+        }
+        .result-box.ok   {background:rgba(5,150,105,.08); border-color:#059669}
+        .result-box.warn {background:rgba(217,119,6,.08);  border-color:#d97706}
+        .result-title{font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:.75rem;display:flex;align-items:center;gap:.5rem}
+        .result-box.ok   .result-title{color:#34d399}
+        .result-box.warn .result-title{color:#fbbf24}
+        .result-stats{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+        .result-stat{background:rgba(255,255,255,.04);border-radius:10px;padding:.875rem 1rem;text-align:center}
+        .result-stat-val{font-size:2rem;font-weight:800;font-family:'Courier New',monospace}
+        .result-stat-val.green{color:#34d399}
+        .result-stat-val.red  {color:#f87171}
+        .result-stat-label{font-size:.72rem;color:#64748b;margin-top:.25rem}
+
+        /* What this does panel */
+        .info-panel{
+            background:rgba(37,99,235,.06);
+            border:1px solid rgba(37,99,235,.2);
+            border-radius:14px;
+            padding:1.1rem 1.25rem;
+            margin-bottom:1.75rem;
+        }
+        .info-panel h4{font-size:.8rem;font-weight:700;color:#60a5fa;margin-bottom:.6rem;display:flex;align-items:center;gap:.4rem}
+        .step-list{list-style:none;display:flex;flex-direction:column;gap:.5rem}
+        .step-list li{font-size:.8rem;color:#94a3b8;display:flex;align-items:flex-start;gap:.6rem;line-height:1.55}
+        .step-num{width:18px;height:18px;background:rgba(37,99,235,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;color:#60a5fa;flex-shrink:0;margin-top:.1rem}
+
+        /* Warning banner before run */
+        .warning-banner{
+            background:rgba(217,119,6,.08);
+            border:1px solid rgba(217,119,6,.25);
+            border-radius:12px;
+            padding:1rem 1.25rem;
+            margin-bottom:1.75rem;
+            font-size:.8rem;
+            color:#fbbf24;
+            display:flex;align-items:flex-start;gap:.6rem;
+            line-height:1.55;
+        }
+        .warning-banner span{flex-shrink:0;font-size:1rem}
+
+        .btn{padding:.8rem 1.5rem;border:none;border-radius:10px;font-size:.9rem;font-weight:600;font-family:inherit;cursor:pointer;transition:all .2s;text-decoration:none;display:inline-flex;align-items:center;gap:.5rem}
+        .btn-run{background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;box-shadow:0 4px 12px rgba(37,99,235,.35)}
+        .btn-run:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(37,99,235,.45)}
+        .btn-secondary{background:#0f172a;color:#94a3b8;border:1px solid #334155}
+        .btn-secondary:hover{color:#f1f5f9;border-color:#475569}
+        .btn-row{display:flex;gap:.75rem;flex-wrap:wrap}
+
+        /* generic flash */
+        .alert{padding:.875rem 1.25rem;border-radius:10px;font-size:.875rem;margin-bottom:1.5rem;border-left:4px solid}
+        .alert-success{background:rgba(5,150,105,.1);border-color:#059669;color:#34d399}
+        .alert-warning{background:rgba(217,119,6,.1); border-color:#d97706;color:#fbbf24}
+        .alert-danger {background:rgba(220,38,38,.1); border-color:#dc2626;color:#f87171}
+        .alert-info   {background:rgba(37,99,235,.1); border-color:#2563eb;color:#93c5fd}
+
+        .divider{border:none;border-top:1px solid #334155;margin:1.75rem 0}
+    </style>
+</head>
+<body>
+    <div class="card">
+        {% if session.get('role') == 'Admin' %}
+            <a href="{{ url_for('admin_dashboard') }}" class="back-link">← Back to Dashboard</a>
+        {% else %}
+            <a href="{{ url_for('manager_dashboard') }}" class="back-link">← Back to Dashboard</a>
+        {% endif %}
+
+        <div class="card-header">
+            <h2>End-of-Month Processing</h2>
+            <p>Run automated loan repayment collection across all active loans.</p>
+        </div>
+
+        {# Parse flash messages — detect EOM summary vs generic errors #}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% for category, message in messages %}
+            {% if 'payments collected' in message.lower() %}
+              {# Extract numbers from the message for the visual summary #}
+              <div class="result-box ok">
+                <div class="result-title">✅ Processing Complete</div>
+                <div class="result-stats">
+                    <div class="result-stat">
+                        <div class="result-stat-val green">
+                            {{ message | regex_search('collected: (\d+)') or '–' }}
+                        </div>
+                        <div class="result-stat-label">Payments Collected</div>
+                    </div>
+                    <div class="result-stat">
+                        <div class="result-stat-val red">
+                            {{ message | regex_search('defaulted: (\d+)') or '–' }}
+                        </div>
+                        <div class="result-stat-label">Loans Defaulted</div>
+                    </div>
+                </div>
+                <p style="font-size:.8rem;color:#64748b;margin-top:.875rem">{{ message }}</p>
+              </div>
+            {% else %}
+              <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endif %}
+          {% endfor %}
+        {% endwith %}
+
+        <!-- What this does -->
+        <div class="info-panel">
+            <h4>⚙ What this procedure does</h4>
+            <ul class="step-list">
+                <li><span class="step-num">1</span>Finds every loan with status <strong style="color:#f1f5f9">Auto-Approved</strong>.</li>
+                <li><span class="step-num">2</span>Calculates each loan's monthly installment as <strong style="color:#f1f5f9">Loan Amount ÷ Duration</strong>.</li>
+                <li><span class="step-num">3</span>Deducts the installment from the customer's oldest Active account that has sufficient balance.</li>
+                <li><span class="step-num">4</span>If no active account can cover the installment, the loan is marked <strong style="color:#f87171">Defaulted</strong>.</li>
+                <li><span class="step-num">5</span>Returns a summary of how many payments succeeded and how many defaulted.</li>
+            </ul>
+        </div>
+
+        <div class="warning-banner">
+            <span>⚠</span>
+            <span>This action is <strong>irreversible</strong>. Real funds are deducted from customer accounts and loans may be marked as Defaulted. Only run this once per month at end-of-period.</span>
+        </div>
+
+        <form method="POST">
+            <div class="btn-row">
+                <button type="submit" class="btn btn-run">▶ Run EOM Processing</button>
+                {% if session.get('role') == 'Admin' %}
+                    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">Cancel</a>
+                {% else %}
+                    <a href="{{ url_for('manager_dashboard') }}" class="btn btn-secondary">Cancel</a>
+                {% endif %}
+            </div>
+        </form>
+
+        <hr class="divider">
+        <p style="font-size:.75rem;color:#475569;line-height:1.6">
+            Access restricted to <strong style="color:#94a3b8">Admin</strong> and <strong style="color:#94a3b8">Manager</strong> roles only.
+            The procedure runs synchronously — large loan portfolios may take a few seconds to process.
+        </p>
+    </div>
+</body>
+</html>

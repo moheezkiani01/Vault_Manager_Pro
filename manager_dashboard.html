@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manager Dashboard — NexaVault Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+
+        .sidebar {
+            position: fixed; top: 0; left: 0; width: 260px; height: 100vh;
+            background: #1e293b; border-right: 1px solid #334155;
+            display: flex; flex-direction: column; z-index: 100;
+        }
+        .sidebar-brand { padding: 1.5rem 1.5rem 1rem; border-bottom: 1px solid #334155; }
+        .logo { display: flex; align-items: center; gap: 0.75rem; }
+        .logo-icon {
+            width: 40px; height: 40px;
+            background: linear-gradient(135deg, #059669, #047857);
+            border-radius: 10px; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 12px rgba(5,150,105,0.4);
+        }
+        .logo-icon svg { width: 20px; height: 20px; color: #fff; }
+        .logo-text h2 { font-size: 0.95rem; font-weight: 700; color: #f1f5f9; }
+        .logo-text span { font-size: 0.72rem; color: #64748b; }
+        .role-badge {
+            margin: 1rem 1.5rem 0; padding: 0.4rem 0.75rem;
+            background: rgba(5,150,105,0.15); border: 1px solid rgba(5,150,105,0.3);
+            border-radius: 6px; color: #34d399; font-size: 0.72rem; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.08em; text-align: center;
+        }
+        .nav { flex: 1; padding: 1rem 0; overflow-y: auto; }
+        .nav-section { padding: 0.5rem 1.5rem 0.25rem; font-size: 0.65rem; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: 0.1em; }
+        .nav a {
+            display: flex; align-items: center; gap: 0.75rem;
+            padding: 0.65rem 1.5rem; color: #94a3b8; font-size: 0.875rem; font-weight: 500;
+            text-decoration: none; transition: all 0.15s; border-left: 3px solid transparent;
+        }
+        .nav a:hover { color: #f1f5f9; background: rgba(255,255,255,0.04); border-left-color: #059669; }
+        .nav a.active { color: #34d399; background: rgba(5,150,105,0.1); border-left-color: #059669; }
+        .nav a svg { width: 18px; height: 18px; flex-shrink: 0; }
+        /* EOM nav item — special teal accent */
+        .nav a.eom-link { color: #60a5fa; }
+        .nav a.eom-link:hover { color: #93c5fd; border-left-color: #2563eb; background: rgba(37,99,235,.06); }
+
+        .sidebar-footer { padding: 1rem 1.5rem; border-top: 1px solid #334155; }
+        .user-info { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem; }
+        .avatar {
+            width: 36px; height: 36px; border-radius: 50%;
+            background: linear-gradient(135deg, #059669, #047857);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 0.875rem; color: #fff; flex-shrink: 0;
+        }
+        .user-info .info h4 { font-size: 0.85rem; font-weight: 600; color: #f1f5f9; }
+        .user-info .info span { font-size: 0.72rem; color: #64748b; }
+        .btn-logout {
+            display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+            width: 100%; padding: 0.6rem;
+            background: rgba(220,38,38,0.1); border: 1px solid rgba(220,38,38,0.3);
+            border-radius: 8px; color: #f87171; font-size: 0.8rem; font-weight: 500;
+            text-decoration: none; transition: all 0.2s;
+        }
+        .btn-logout:hover { background: rgba(220,38,38,0.2); }
+        .btn-logout svg { width: 16px; height: 16px; }
+
+        .main { margin-left: 260px; padding: 2rem; min-height: 100vh; }
+        .page-header { margin-bottom: 2rem; }
+        .page-header h1 { font-size: 1.6rem; font-weight: 700; color: #f1f5f9; }
+        .page-header p { color: #64748b; font-size: 0.875rem; margin-top: 0.25rem; }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 1.25rem; margin-bottom: 2.5rem; }
+        .stat-card {
+            background: #1e293b; border: 1px solid #334155; border-radius: 16px;
+            padding: 1.5rem; position: relative; overflow: hidden;
+        }
+        .stat-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
+        .stat-card.blue::before   { background:linear-gradient(90deg,#2563eb,#60a5fa); }
+        .stat-card.green::before  { background:linear-gradient(90deg,#059669,#34d399); }
+        .stat-card.amber::before  { background:linear-gradient(90deg,#d97706,#fbbf24); }
+        .stat-card.purple::before { background:linear-gradient(90deg,#7c3aed,#a78bfa); }
+        .stat-card.red::before    { background:linear-gradient(90deg,#dc2626,#f87171); }
+        .stat-icon { width:44px; height:44px; border-radius:10px; display:flex; align-items:center; justify-content:center; margin-bottom:1rem; }
+        .stat-icon.blue   { background:rgba(37,99,235,0.15); color:#60a5fa; }
+        .stat-icon.green  { background:rgba(5,150,105,0.15);  color:#34d399; }
+        .stat-icon.amber  { background:rgba(217,119,6,0.15);   color:#fbbf24; }
+        .stat-icon.purple { background:rgba(124,58,237,0.15);  color:#a78bfa; }
+        .stat-icon.red    { background:rgba(220,38,38,0.15);   color:#f87171; }
+        .stat-icon svg { width:22px; height:22px; }
+        .stat-value { font-size:1.75rem; font-weight:700; color:#f1f5f9; }
+        .stat-label { font-size:0.8rem; color:#64748b; margin-top:0.25rem; }
+
+        .section-title { font-size:1.1rem; font-weight:600; color:#f1f5f9; margin-bottom:1.25rem; margin-top:2rem; }
+
+        /* Action cards grid */
+        .actions-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1.25rem; }
+        .action-card {
+            background:#1e293b; border:1px solid #334155; border-radius:16px;
+            padding:1.75rem; text-decoration:none; transition:all 0.2s;
+            display:flex; flex-direction:column; gap:1rem;
+        }
+        .action-card:hover { border-color:#059669; transform:translateY(-2px); box-shadow:0 8px 30px rgba(5,150,105,0.15); }
+        /* EOM card gets blue hover accent */
+        .action-card.eom-card:hover { border-color:#2563eb; box-shadow:0 8px 30px rgba(37,99,235,0.15); }
+        .action-icon { width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; }
+        .action-icon svg { width:24px; height:24px; }
+        .action-card h3 { font-size:1rem; font-weight:600; color:#f1f5f9; }
+        .action-card p  { font-size:0.8rem; color:#64748b; line-height:1.5; }
+        .action-arrow   { margin-top:auto; color:#475569; font-size:0.8rem; }
+
+        .alert { padding:0.875rem 1.25rem; border-radius:10px; font-size:0.875rem; margin-bottom:1.5rem; border-left:4px solid; }
+        .alert-success { background:rgba(5,150,105,0.1);  border-color:#059669; color:#34d399; }
+        .alert-warning { background:rgba(217,119,6,0.1);  border-color:#d97706; color:#fbbf24; }
+        .alert-danger  { background:rgba(220,38,38,0.1);  border-color:#dc2626; color:#f87171; }
+        .alert-info    { background:rgba(37,99,235,0.1);  border-color:#2563eb; color:#93c5fd; }
+
+        /* Fraud alert in dashboard context */
+        .fraud-alert { background:rgba(220,38,38,.1); border:1px solid rgba(220,38,38,.4); border-radius:10px; padding:.875rem 1.25rem; margin-bottom:1.5rem; border-left:4px solid #dc2626; }
+        .fraud-alert-title { font-size:.75rem; font-weight:700; color:#f87171; text-transform:uppercase; letter-spacing:.07em; margin-bottom:.3rem; }
+        .fraud-alert-body  { font-size:.875rem; color:#fca5a5; }
+
+        @media(max-width:1200px){.stats-grid{grid-template-columns:repeat(3,1fr)}.actions-grid{grid-template-columns:repeat(2,1fr)}}
+        @media(max-width:768px){.stats-grid{grid-template-columns:repeat(2,1fr)}.actions-grid{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <div class="logo">
+                <div class="logo-icon">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z"/>
+                    </svg>
+                </div>
+                <div class="logo-text">
+                    <h2>NexaVault</h2>
+                    <span>Pro v2.0</span>
+                </div>
+            </div>
+            <div class="role-badge">👤 Manager</div>
+        </div>
+        <nav class="nav">
+            <div class="nav-section">Overview</div>
+            <a href="{{ url_for('manager_dashboard') }}" class="active">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"/></svg>
+                Dashboard
+            </a>
+            <div class="nav-section">Customers & Accounts</div>
+            <a href="{{ url_for('add_customer') }}">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z"/></svg>
+                Add Customer
+            </a>
+            <a href="{{ url_for('add_account') }}">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                Add Account
+            </a>
+            <a href="{{ url_for('view_customers') }}">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/></svg>
+                View Customers
+            </a>
+            <a href="{{ url_for('view_accounts') }}">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z"/></svg>
+                View Accounts
+            </a>
+            <a href="{{ url_for('deactivate_account') }}">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                Deactivate / Delete
+            </a>
+            <div class="nav-section">Transactions</div>
+            <a href="{{ url_for('transaction') }}">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"/></svg>
+                Deposit / Withdraw
+            </a>
+            <a href="{{ url_for('transfer') }}">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941"/></svg>
+                Transfer Money
+            </a>
+            <div class="nav-section">Loans</div>
+            <a href="{{ url_for('add_loan') }}">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10.5v6m3-3H9m4.06-7.19l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z"/></svg>
+                Apply for Loan
+            </a>
+            <a href="{{ url_for('update_loan') }}">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"/></svg>
+                Update Loan Status
+            </a>
+            <a href="{{ url_for('view_loans') }}">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+                View Loans
+            </a>
+            <!-- FEATURE 3: EOM Processing link -->
+            <div class="nav-section">Automation</div>
+            <a href="{{ url_for('run_eom_processing') }}" class="eom-link">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
+                EOM Processing
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="avatar">M</div>
+                <div class="info">
+                    <h4>{{ session.get('username', 'Manager') }}</h4>
+                    <span>Branch Manager</span>
+                </div>
+            </div>
+            <a href="{{ url_for('logout') }}" class="btn-logout">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75"/></svg>
+                Sign Out
+            </a>
+        </div>
+    </aside>
+
+    <main class="main">
+        <div class="page-header">
+            <h1>Manager Dashboard</h1>
+            <p>Customer operations, transactions and loan management</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% for category, message in messages %}
+            {% if '🚨' in message or 'fraud' in message.lower() or 'suspicious' in message.lower() %}
+              <div class="fraud-alert">
+                <div class="fraud-alert-title">🚨 Fraud Detection Triggered</div>
+                <div class="fraud-alert-body">{{ message | replace('🚨 FRAUD ALERT: ','') }}</div>
+              </div>
+            {% else %}
+              <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endif %}
+          {% endfor %}
+        {% endwith %}
+
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card blue">
+                <div class="stat-icon blue">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/></svg>
+                </div>
+                <div class="stat-value">{{ total_customers }}</div>
+                <div class="stat-label">Total Customers</div>
+            </div>
+            <div class="stat-card green">
+                <div class="stat-icon green">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z"/></svg>
+                </div>
+                <div class="stat-value">{{ total_accounts }}</div>
+                <div class="stat-label">Total Accounts</div>
+            </div>
+            <div class="stat-card amber">
+                <div class="stat-icon amber">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+                </div>
+                <div class="stat-value">{{ pending_loans }}</div>
+                <div class="stat-label">Pending Loans</div>
+            </div>
+            <div class="stat-card purple">
+                <div class="stat-icon purple">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"/></svg>
+                </div>
+                <div class="stat-value">{{ total_transactions }}</div>
+                <div class="stat-label">Total Transactions</div>
+            </div>
+            <div class="stat-card red">
+                <div class="stat-icon red">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                </div>
+                <div class="stat-value">{{ inactive_accounts }}</div>
+                <div class="stat-label">Inactive Accounts</div>
+            </div>
+        </div>
+
+        <p class="section-title">Quick Actions</p>
+        <div class="actions-grid">
+            <a href="{{ url_for('add_customer') }}" class="action-card">
+                <div class="action-icon" style="background:rgba(37,99,235,0.15);">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="#60a5fa" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z"/></svg>
+                </div>
+                <h3>Add New Customer</h3>
+                <p>Register a new customer. A unique Customer ID will be assigned automatically.</p>
+                <span class="action-arrow">→ Go to form</span>
+            </a>
+            <a href="{{ url_for('add_account') }}" class="action-card">
+                <div class="action-icon" style="background:rgba(5,150,105,0.15);">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="#34d399" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <h3>Open New Account</h3>
+                <p>Link a bank account to an existing customer. Select from the dropdown — no manual ID entry.</p>
+                <span class="action-arrow">→ Go to form</span>
+            </a>
+            <a href="{{ url_for('transaction') }}" class="action-card">
+                <div class="action-icon" style="background:rgba(217,119,6,0.15);">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="#fbbf24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"/></svg>
+                </div>
+                <h3>Deposit / Withdraw</h3>
+                <p>Process a deposit or withdrawal. Fraud detection is active — suspicious activity is auto-blocked.</p>
+                <span class="action-arrow">→ Go to form</span>
+            </a>
+            <a href="{{ url_for('transfer') }}" class="action-card">
+                <div class="action-icon" style="background:rgba(124,58,237,0.15);">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="#a78bfa" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941"/></svg>
+                </div>
+                <h3>Transfer Money</h3>
+                <p>Move funds between two accounts instantly.</p>
+                <span class="action-arrow">→ Go to form</span>
+            </a>
+            <a href="{{ url_for('add_loan') }}" class="action-card">
+                <div class="action-icon" style="background:rgba(5,150,105,0.15);">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="#34d399" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10.5v6m3-3H9m4.06-7.19l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z"/></svg>
+                </div>
+                <h3>Apply for Loan</h3>
+                <p>Submit a loan request. Interest rate and approval are determined automatically by AI risk assessment.</p>
+                <span class="action-arrow">→ Go to form</span>
+            </a>
+            <a href="{{ url_for('view_loans') }}" class="action-card">
+                <div class="action-icon" style="background:rgba(220,38,38,0.15);">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="#f87171" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+                </div>
+                <h3>View All Loans</h3>
+                <p>Review all active, pending and historical loan records.</p>
+                <span class="action-arrow">→ View records</span>
+            </a>
+            <a href="{{ url_for('deactivate_account') }}" class="action-card">
+                <div class="action-icon" style="background:rgba(220,38,38,0.12);">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="#f87171" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                </div>
+                <h3>Deactivate / Delete Account</h3>
+                <p>Soft-deactivate an account to block all transactions, reactivate it, or permanently delete accounts with no history.</p>
+                <span class="action-arrow">→ Manage accounts</span>
+            </a>
+            <!-- FEATURE 3: EOM Processing action card -->
+            <a href="{{ url_for('run_eom_processing') }}" class="action-card eom-card">
+                <div class="action-icon" style="background:rgba(37,99,235,0.12);">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="#60a5fa" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
+                </div>
+                <h3>EOM Processing</h3>
+                <p>Run automated end-of-month loan repayment collection. Deducts installments and marks defaulted loans.</p>
+                <span class="action-arrow">→ Run processing</span>
+            </a>
+        </div>
+    </main>
+</body>
+</html>

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Account — VaultManager Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+        .card { background: #1e293b; border: 1px solid #334155; border-radius: 20px; padding: 2.5rem; width: 100%; max-width: 520px; }
+        .back-link { display: inline-flex; align-items: center; gap: 0.4rem; color: #64748b; font-size: 0.8rem; text-decoration: none; margin-bottom: 1.25rem; transition: color 0.15s; }
+        .back-link:hover { color: #94a3b8; }
+        .card-header { margin-bottom: 2rem; }
+        .card-header h2 { font-size: 1.35rem; font-weight: 700; color: #f1f5f9; }
+        .card-header p  { color: #64748b; font-size: 0.875rem; margin-top: 0.25rem; }
+        .form-group { margin-bottom: 1.25rem; }
+        label { display: block; color: #94a3b8; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 0.5rem; }
+        input, select { width: 100%; padding: 0.75rem 1rem; background: #0f172a; border: 1px solid #334155; border-radius: 10px; color: #f1f5f9; font-size: 0.9rem; font-family: inherit; outline: none; transition: all 0.2s; -webkit-appearance: none; }
+        input:focus, select:focus { border-color: #059669; box-shadow: 0 0 0 3px rgba(5,150,105,0.2); }
+        input::placeholder { color: #475569; }
+        select option { background: #1e293b; color: #f1f5f9; }
+        .select-wrapper { position: relative; }
+        .select-wrapper::after { content: '▾'; position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); color: #475569; pointer-events: none; }
+        .hint { font-size: 0.72rem; color: #475569; margin-top: 0.35rem; }
+        .btn { padding: 0.8rem 1.5rem; border: none; border-radius: 10px; font-size: 0.9rem; font-weight: 600; font-family: inherit; cursor: pointer; transition: all 0.2s; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; }
+        .btn-success { background: linear-gradient(135deg,#059669,#047857); color: #fff; box-shadow: 0 4px 12px rgba(5,150,105,0.3); }
+        .btn-success:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(5,150,105,0.4); }
+        .btn-secondary { background: #0f172a; color: #94a3b8; border: 1px solid #334155; }
+        .btn-secondary:hover { color: #f1f5f9; border-color: #475569; }
+        .btn-row { display: flex; gap: 0.75rem; margin-top: 1.5rem; flex-wrap: wrap; }
+        .alert { padding: 0.875rem 1.25rem; border-radius: 10px; font-size: 0.875rem; margin-bottom: 1.5rem; border-left: 4px solid; }
+        .alert-success { background: rgba(5,150,105,0.1);  border-color: #059669; color: #34d399; }
+        .alert-danger  { background: rgba(220,38,38,0.1);  border-color: #dc2626; color: #f87171; }
+        .alert-info    { background: rgba(37,99,235,0.1);  border-color: #2563eb; color: #93c5fd; }
+
+        /* Info box linking to add customer */
+        .link-banner {
+            background: rgba(37,99,235,0.08);
+            border: 1px solid rgba(37,99,235,0.25);
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 1.5rem;
+            display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+        }
+        .link-banner p { font-size: 0.82rem; color: #93c5fd; }
+        .link-banner a { font-size: 0.8rem; color: #60a5fa; text-decoration: none; white-space: nowrap; font-weight: 600; }
+        .link-banner a:hover { color: #93c5fd; }
+
+        .pre-selected-badge {
+            display: inline-block;
+            background: rgba(5,150,105,0.15); border: 1px solid rgba(5,150,105,0.3);
+            color: #34d399; font-size: 0.7rem; font-weight: 600;
+            padding: 0.2rem 0.6rem; border-radius: 20px; margin-left: 0.5rem;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <a href="{{ url_for('manager_dashboard') }}" class="back-link">← Back to Dashboard</a>
+        <div class="card-header">
+            <h2>Open New Account</h2>
+            <p>Link a bank account to an existing customer. Select the customer from the list below.</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        {% endwith %}
+
+        {% if not customers %}
+        <div class="link-banner">
+            <p>No customers registered yet. You must add a customer first before opening an account.</p>
+            <a href="{{ url_for('add_customer') }}">+ Add Customer →</a>
+        </div>
+        {% else %}
+        <div class="link-banner">
+            <p>New customer? Register them first to get their ID, then come back here.</p>
+            <a href="{{ url_for('add_customer') }}">+ Add Customer →</a>
+        </div>
+
+        <form method="POST">
+            <div class="form-group">
+                <label>
+                    Select Customer
+                    {% if preselected_id %}<span class="pre-selected-badge">✓ Auto-selected from last added</span>{% endif %}
+                </label>
+                <div class="select-wrapper">
+                    <select name="customer_id" required>
+                        <option value="" disabled {% if not preselected_id %}selected{% endif %}>— Choose a customer —</option>
+                        {% for cust in customers %}
+                        <option value="{{ cust[0] }}"
+                            {% if preselected_id and cust[0] == preselected_id %}selected{% endif %}>
+                            {{ cust[1] }} &nbsp;(ID: {{ cust[0] }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <p class="hint">Customer ID is shown next to each name — no manual entry needed.</p>
+            </div>
+            <div class="form-group">
+                <label>Initial Balance ($)</label>
+                <input type="number" name="balance" placeholder="e.g. 5000" step="0.01" min="0" required>
+                <p class="hint">Opening deposit amount for this account.</p>
+            </div>
+            <div class="form-group">
+                <label>Account Type</label>
+                <div class="select-wrapper">
+                    <select name="account_type" required>
+                        <option value="Savings">Savings</option>
+                        <option value="Checking">Checking</option>
+                    </select>
+                </div>
+            </div>
+            <div class="btn-row">
+                <button type="submit" class="btn btn-success">Open Account →</button>
+                <a href="{{ url_for('manager_dashboard') }}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+        {% endif %}
+    </div>
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Customers — VaultManager Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:'Inter',sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;padding:2rem}
+        .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;flex-wrap:wrap;gap:1rem}
+        .page-header h1{font-size:1.5rem;font-weight:700;color:#f1f5f9}
+        .actions{display:flex;gap:.75rem}
+        .back-link{display:inline-flex;align-items:center;gap:.4rem;color:#64748b;font-size:.85rem;text-decoration:none;padding:.6rem 1rem;border:1px solid #334155;border-radius:8px;transition:all .15s}
+        .back-link:hover{color:#f1f5f9;border-color:#475569}
+        .btn-add{display:inline-flex;align-items:center;gap:.4rem;color:#f1f5f9;font-size:.85rem;text-decoration:none;padding:.6rem 1rem;background:linear-gradient(135deg,#2563eb,#1d4ed8);border-radius:8px;font-weight:600;transition:all .15s}
+        .btn-add:hover{transform:translateY(-1px)}
+        .section{background:#1e293b;border:1px solid #334155;border-radius:16px;overflow:hidden}
+        table{width:100%;border-collapse:collapse;font-size:.85rem}
+        thead tr{background:#0f172a}
+        th{padding:.875rem 1.25rem;text-align:left;font-size:.72rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid #334155}
+        td{padding:.875rem 1.25rem;color:#cbd5e1;border-bottom:1px solid rgba(255,255,255,.03)}
+        tbody tr:hover{background:rgba(255,255,255,.02)}
+        tbody tr:last-child td{border-bottom:none}
+        .badge{display:inline-flex;align-items:center;padding:.2rem .65rem;border-radius:20px;font-size:.72rem;font-weight:600;background:rgba(37,99,235,.15);color:#60a5fa;border:1px solid rgba(37,99,235,.3)}
+        .empty{text-align:center;color:#475569;padding:3rem}
+    </style>
+</head>
+<body>
+    <div class="page-header">
+        <h1>All Customers</h1>
+        <div class="actions">
+            <a href="{{ url_for('add_customer') }}" class="btn-add">+ Add Customer</a>
+            <a href="{{ url_for('manager_dashboard') }}" class="back-link">← Dashboard</a>
+        </div>
+    </div>
+    <div class="section">
+        <table>
+            <thead>
+                <tr><th>Customer Name</th><th>Email</th><th>Total Accounts</th></tr>
+            </thead>
+            <tbody>
+                {% for cust in customers %}
+                <tr>
+                    <td>{{ cust[0] }}</td>
+                    <td style="color:#64748b">{{ cust[1] }}</td>
+                    <td><span class="badge">{{ cust[2] }} account{{ 's' if cust[2] != 1 }}</span></td>
+                </tr>
+                {% else %}
+                <tr><td colspan="3" class="empty">No customers found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

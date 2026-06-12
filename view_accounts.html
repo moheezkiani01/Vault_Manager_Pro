@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Accounts — VaultManager Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:'Inter',sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;padding:2rem}
+        .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem}
+        .page-header h1{font-size:1.5rem;font-weight:700;color:#f1f5f9}
+        .back-link{display:inline-flex;align-items:center;gap:.4rem;color:#64748b;font-size:.85rem;text-decoration:none;padding:.6rem 1rem;border:1px solid #334155;border-radius:8px;transition:all .15s}
+        .back-link:hover{color:#f1f5f9;border-color:#475569}
+        .section{background:#1e293b;border:1px solid #334155;border-radius:16px;overflow:hidden}
+        table{width:100%;border-collapse:collapse;font-size:.85rem}
+        thead tr{background:#0f172a}
+        th{padding:.875rem 1.25rem;text-align:left;font-size:.72rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid #334155}
+        td{padding:.875rem 1.25rem;color:#cbd5e1;border-bottom:1px solid rgba(255,255,255,.03)}
+        tbody tr:hover{background:rgba(255,255,255,.02)}
+        tbody tr:last-child td{border-bottom:none}
+        .amount{font-family:'Courier New',monospace;font-weight:600;color:#34d399}
+        .empty{text-align:center;color:#475569;padding:3rem}
+    </style>
+</head>
+<body>
+    <div class="page-header">
+        <h1>All Accounts</h1>
+        <a href="{{ url_for('manager_dashboard') }}" class="back-link">← Dashboard</a>
+    </div>
+    <div class="section">
+        <table>
+            <thead>
+                <tr><th>Account ID</th><th>Customer Name</th><th>Balance</th><th>Type</th></tr>
+            </thead>
+            <tbody>
+                {% for acc in accounts %}
+                <tr>
+                    <td>#{{ acc[0] }}</td>
+                    <td>{{ acc[1] }}</td>
+                    <td class="amount">${{ acc[2]|float|round(2) }}</td>
+                    <td>{{ acc[3] }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="4" class="empty">No accounts found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
